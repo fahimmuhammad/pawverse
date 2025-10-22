@@ -11,12 +11,62 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
+    /* =========================
+       THEME ADDITION START
+       - Light (default) variables
+       - Glass-style Dark overrides via body.theme-dark
+       - theme-transition handling (used by theme.js)
+       ========================= */
     :root{
-      --deep-1: #0f1724; /* near slate-900 */
-      --deep-2: #334155; /* slate-700 */
+      --deep-1: #0f1724; /* used earlier as dark default in original - we'll set light-mode values below via .light-root */
+      --deep-2: #334155;
       --cream: #fbfaf8;
       --accent: #3b82f6;
+      --text: #0f172a;
+      --panel: #ffffff;
+      --soft: #f8fafc;
     }
+
+    /* Default: Light mode values (explicit so Tailwind inline color references behave well) */
+    body {
+      --deep-1: #ffffff;
+      --deep-2: #f8fafc;
+      --cream: #fbfaf8;
+      --accent: #3b82f6;
+      --text: #0f172a;
+      --panel: #ffffff;
+      --soft: #f1f5f9;
+      background: var(--deep-1);
+      color: var(--text);
+    }
+
+    /* Glass-style Dark Mode — applied by theme.js via body.classList.add('theme-dark') */
+    body.theme-dark {
+      --deep-1: #0f1724;
+      --deep-2: #334155;
+      --cream: rgba(255,255,255,0.03);
+      --accent: #3b82f6;
+      --text: #e6eef8;
+      --panel: rgba(255,255,255,0.04);
+      --soft: rgba(255,255,255,0.02);
+      background: linear-gradient(135deg, var(--deep-1), var(--deep-2));
+      color: var(--text);
+    }
+
+    /* Smooth transition class (theme.js toggles this briefly for a smooth switch) */
+    body.theme-transition {
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* Small helper so some inline bg-[color:var(--...)] works gracefully */
+    .bg-deep-1 { background: var(--deep-1) !important; }
+    .bg-deep-2 { background: var(--deep-2) !important; }
+    .text-accent { color: var(--accent) !important; }
+    .bg-panel { background: var(--panel) !important; }
+
+    /* End THEME ADDITION */
+    /* ========================= */
+
     html,body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
     /* subtle card glass */
     .card-glass { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); backdrop-filter: blur(6px); }
@@ -35,6 +85,31 @@
     /* custom scrollbar (subtle) */
     .no-scrollbar::-webkit-scrollbar { height: 8px; }
     .no-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 999px; }
+
+    /* THEME ADDITION: Toggle switch styles (keeps same look across pages) */
+    .switch {
+      width: 52px;
+      height: 30px;
+      border-radius: 999px;
+      padding: 3px;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.06);
+      transition: background 0.25s ease;
+    }
+    .switch .knob {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: white;
+      transform: translateX(0);
+      transition: transform 0.25s ease, background 0.25s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .switch.on { background: linear-gradient(90deg, var(--accent), #60a5fa); }
+    .switch.on .knob { transform: translateX(22px); }
+
   </style>
 </head>
 <body class="bg-gradient-to-b from-[color:var(--deep-1)] via-[color:var(--deep-2)] to-slate-700 text-slate-100 antialiased">
@@ -60,6 +135,16 @@
           <a href="about.php" class="text-slate-200 hover:text-white">About</a>
           <a href="contact.php" class="text-slate-200 hover:text-white">Contact</a>
           <a href="auth/login.php" class="ml-4 inline-flex items-center gap-2 bg-[color:var(--accent)] px-4 py-2 rounded-lg text-white font-medium shadow-sm hover:bg-blue-500 transition">Log in</a>
+
+          <!-- THEME ADDITION START: Theme Toggle (same slider used across site) -->
+          <div class="flex items-center gap-2 ml-4">
+            <div class="text-xs text-slate-300">☀️</div>
+            <div id="themeSwitch" role="switch" aria-checked="false" tabindex="0" class="switch" title="Toggle dark mode">
+              <div class="knob"></div>
+            </div>
+            <div class="text-xs text-slate-300">🌙</div>
+          </div>
+          <!-- THEME ADDITION END -->
         </div>
 
         <!-- mobile menu button -->
@@ -429,5 +514,9 @@
     document.documentElement.classList.remove('no-js');
     document.querySelectorAll('.fade-up').forEach(el => { el.classList.add('in-view'); }); // graceful if IntersectionObserver unsupported
   </script>
+
+  <!-- THEME ADDITION: Include your global theme manager (reads/writes localStorage and toggles body.theme-dark) -->
+  <script src="assets/js/theme.js"></script>
+
 </body>
 </html>
