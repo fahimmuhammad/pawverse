@@ -1,4 +1,10 @@
-<?php include('includes/db_connect.php'); ?>
+<?php
+session_start();
+include('includes/db_connect.php');
+
+// check login state
+$isLoggedIn = isset($_SESSION['user_id']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,7 +90,12 @@
         <a href="services.php" class="muted hover:text-[color:var(--accent)] transition">Services</a>
         <a href="about.php" class="muted hover:text-[color:var(--accent)] transition">About</a>
         <a href="contact.php" class="muted hover:text-[color:var(--accent)] transition">Contact</a>
-        <a href="auth/login.php" class="bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg hover:opacity-90 transition">Login</a>
+
+        <?php if ($isLoggedIn): ?>
+          <a href="auth/logout.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Logout</a>
+        <?php else: ?>
+          <a href="auth/login.php" class="bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg hover:opacity-90 transition">Login</a>
+        <?php endif; ?>
 
         <!-- Theme Toggle -->
         <div class="flex items-center gap-2 ml-4">
