@@ -146,7 +146,7 @@ setTimeout(()=>document.getElementById('toast').classList.remove('show'),3300);
           <a href="products.php" class="block px-4 py-2 rounded-lg bg-[color:var(--accent)] text-white font-semibold">Products</a>
           <a href="orders.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Orders</a>
           <a href="users.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Users</a>
-          <a href="vets.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Veterinarians</a>
+          <a href="veterinarians.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Veterinarians</a>
           <a href="messages.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Messages</a>
         </nav>
       </div>

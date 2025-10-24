@@ -3,7 +3,7 @@
 session_start();
 require_once __DIR__ . '/../config/db.php';
 
-// If already logged in -> redirect to appropriate area
+// If already logged in → redirect appropriately
 if (isset($_SESSION['user_id'])) {
   if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
     header('Location: ../admin/dashboard.php');
@@ -13,7 +13,7 @@ if (isset($_SESSION['user_id'])) {
   exit;
 }
 
-// Ensure activity_log table exists (used for logging login events)
+// Ensure activity_log exists (used for logging login events)
 $conn->query("
   CREATE TABLE IF NOT EXISTS activity_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -26,17 +26,17 @@ $conn->query("
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-// helper to add activity
+// Helper: add activity
 function add_activity_log($conn, $user_id, $action, $details = null) {
   $stmt = $conn->prepare("INSERT INTO activity_log (user_id, action, details) VALUES (?, ?, ?)");
-  if (!$stmt) return false;
-  $stmt->bind_param("iss", $user_id, $action, $details);
-  $res = $stmt->execute();
-  $stmt->close();
-  return $res;
+  if ($stmt) {
+    $stmt->bind_param("iss", $user_id, $action, $details);
+    $stmt->execute();
+    $stmt->close();
+  }
 }
 
-$notice = null; // array('type'=>'error'|'success','text'=>'')
+$notice = null; // ['type'=>'error'|'success','text'=>'...']
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = trim($_POST['email'] ?? '');
@@ -53,26 +53,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if ($res && $res->num_rows === 1) {
         $user = $res->fetch_assoc();
 
-        if ($user['status'] !== 'active') {
-          $notice = ['type' => 'error', 'text' => 'Account not active. Contact support.'];
+        // Admins can log in regardless of status
+        $isAdmin = ($user['role'] === 'admin');
+
+        // Restrict inactive users except admins
+        if (!$isAdmin && $user['status'] !== 'active') {
+          $notice = ['type' => 'error', 'text' => 'Your account is inactive. Please contact the administrator.'];
         } elseif (password_verify($password, $user['password'])) {
-          // success: set session
+          // success → set session
           $_SESSION['user_id'] = $user['id'];
           $_SESSION['user_name'] = $user['name'];
           $_SESSION['user_email'] = $user['email'];
           $_SESSION['user_role'] = $user['role'];
 
           // log activity
-          add_activity_log($conn, $user['id'], 'User logged in', 'IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+          $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+          if ($ip === '::1') $ip = '127.0.0.1';
+          add_activity_log($conn, $user['id'], 'User logged in', "IP: $ip");
 
-          // redirect depending on role
+          // redirect by role
           if ($user['role'] === 'admin') {
             header('Location: ../admin/dashboard.php');
-            exit;
           } else {
             header('Location: ../index.php');
-            exit;
           }
+          exit;
         } else {
           $notice = ['type' => 'error', 'text' => 'Invalid password.'];
         }
