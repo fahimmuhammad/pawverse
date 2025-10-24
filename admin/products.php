@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
   exit;
 }
 
+// Log activity
 function add_activity_log($conn, $user_id, $action, $details = null) {
   $sql = "INSERT INTO activity_log (user_id, action, details) VALUES (?, ?, ?)";
   $stmt = $conn->prepare($sql);
@@ -130,7 +131,7 @@ setTimeout(()=>document.getElementById('toast').classList.remove('show'),3300);
 
 <div class="min-h-screen flex">
   <!-- SIDEBAR -->
-  <aside class="fixed md:static inset-y-0 left-0 w-64 p-6 panel">
+  <aside class="fixed top-0 left-0 h-full w-64 p-6 panel z-40">
     <div class="flex flex-col justify-between h-full">
       <div>
         <div class="flex items-center gap-3 mb-8">
@@ -155,17 +156,17 @@ setTimeout(()=>document.getElementById('toast').classList.remove('show'),3300);
     </div>
   </aside>
 
-  <!-- MAIN (Full Width) -->
-  <main class="flex-1 md:ml-64 p-8">
-    <div class="flex flex-wrap items-center justify-between mb-6 w-full">
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 ml-64 p-8">
+    <div class="flex flex-wrap items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">Manage Products</h1>
-      <div class="flex items-center gap-4 flex-shrink-0">
+      <div class="flex items-center gap-4">
         <div class="flex items-center gap-3">
           <div class="text-sm muted">☀️</div>
           <div id="themeSwitch" class="switch"><div class="knob"></div></div>
           <div class="text-sm muted">🌙</div>
         </div>
-        <button onclick="toggleModal(true)" class="btn btn-primary whitespace-nowrap">+ Add Product</button>
+        <button onclick="toggleModal(true)" class="btn btn-primary">+ Add Product</button>
       </div>
     </div>
 
@@ -203,7 +204,7 @@ setTimeout(()=>document.getElementById('toast').classList.remove('show'),3300);
   </main>
 </div>
 
-<!-- ADD MODAL -->
+<!-- ADD PRODUCT MODAL -->
 <div id="addModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
   <div class="modal-panel">
     <h2 class="text-xl font-semibold mb-4">Add New Product</h2>
@@ -231,7 +232,7 @@ setTimeout(()=>document.getElementById('toast').classList.remove('show'),3300);
   </div>
 </div>
 
-<!-- DELETE MODAL -->
+<!-- DELETE PRODUCT MODAL -->
 <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
   <div class="modal-panel text-center">
     <form method="POST">
