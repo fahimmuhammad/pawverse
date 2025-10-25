@@ -1,9 +1,40 @@
 <?php
 session_start();
-include('includes/db_connect.php');
+include(__DIR__ . '/config/db.php');
 
-// check login state
+// Check login state
 $isLoggedIn = isset($_SESSION['user_id']);
+$username = '';
+
+if ($isLoggedIn) {
+    $userId = $_SESSION['user_id'];
+    $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $stmt->bind_result($username);
+    $stmt->fetch();
+    $stmt->close();
+}
+
+// Fetch categories dynamically if available in DB
+$categories = [];
+$query = "SELECT id, name, image FROM categories LIMIT 4";
+if ($result = $conn->query($query)) {
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $categories[] = $row;
+        }
+    } else {
+        // fallback static content if no categories exist
+        $categories = [
+            ["name" => "Dogs", "image" => "assets/images/Dog_Shop_by_category.png"],
+            ["name" => "Cats", "image" => "assets/images/Cat_Shop_by_category.png"],
+            ["name" => "Birds", "image" => "assets/images/Bird_Shop_by_category.png"],
+            ["name" => "Fish", "image" => "assets/images/Fish_Shop_by_category.png"]
+        ];
+    }
+    $result->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,7 +49,6 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
   <style>
     :root {
-      /* Light Mode */
       --bg: #f8fafc;
       --text: #0f1724;
       --muted: #64748b;
@@ -29,11 +59,10 @@ $isLoggedIn = isset($_SESSION['user_id']);
     }
 
     .theme-dark {
-      /* Dark Mode */
-      --bg: linear-gradient(135deg, #0f1724, #334155);
+      --bg: #0f1724;
       --text: #e6eef8;
       --muted: #94a3b8;
-      --panel: rgba(255, 255, 255, 0.05);
+      --panel: #1e293b;
       --accent: #3b82f6;
       --footer-bg: #0b1220;
       --footer-text: #94a3b8;
@@ -43,7 +72,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
       background: var(--bg);
       color: var(--text);
       font-family: "Inter", sans-serif;
-      transition: background-color 0.4s, color 0.4s;
+      transition: background 0.4s, color 0.4s;
     }
 
     .panel {
@@ -53,7 +82,6 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
     .muted { color: var(--muted); }
 
-    /* slider switch */
     .switch {
       width: 52px; height: 30px;
       border-radius: 999px;
@@ -70,7 +98,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
       background: white;
       transform: translateX(0);
       transition: transform 0.25s ease, background 0.25s;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .switch.on { background: linear-gradient(90deg, var(--accent), #60a5fa); }
     .switch.on .knob { transform: translateX(22px); background: white; }
@@ -82,7 +110,10 @@ $isLoggedIn = isset($_SESSION['user_id']);
   <!-- Navbar -->
   <header class="panel shadow-sm sticky top-0 z-50 border-b border-white/10">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-extrabold text-[color:var(--accent)]">PawVerse</h1>
+      <a href="index.php" class="flex items-center gap-3">
+        <img src="assets/images/logo.png" class="w-10 h-10 rounded-lg" alt="PawVerse Logo">
+        <h1 class="text-2xl font-extrabold text-[color:var(--accent)]">PawVerse</h1>
+      </a>
 
       <nav class="hidden md:flex space-x-6 items-center">
         <a href="index.php" class="font-semibold text-[color:var(--accent)]">Home</a>
@@ -92,6 +123,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
         <a href="contact.php" class="muted hover:text-[color:var(--accent)] transition">Contact</a>
 
         <?php if ($isLoggedIn): ?>
+          <span class="muted mr-3">👋 Hi, <strong><?php echo htmlspecialchars($username); ?></strong></span>
           <a href="auth/logout.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Logout</a>
         <?php else: ?>
           <a href="auth/login.php" class="bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg hover:opacity-90 transition">Login</a>
@@ -132,22 +164,12 @@ $isLoggedIn = isset($_SESSION['user_id']);
   <section class="max-w-7xl mx-auto px-6 py-20">
     <h3 class="text-3xl font-bold text-center mb-10">Shop by Category</h3>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <?php foreach ($categories as $cat): ?>
       <div class="panel shadow-md rounded-xl p-6 text-center hover:shadow-lg transition">
-        <img src="assets/images/Dog_Shop_by_category.png" class="w-24 mx-auto mb-4">
-        <h4 class="font-semibold text-lg">Dogs</h4>
+        <img src="<?php echo htmlspecialchars($cat['image']); ?>" class="w-24 mx-auto mb-4" alt="<?php echo htmlspecialchars($cat['name']); ?>">
+        <h4 class="font-semibold text-lg"><?php echo htmlspecialchars($cat['name']); ?></h4>
       </div>
-      <div class="panel shadow-md rounded-xl p-6 text-center hover:shadow-lg transition">
-        <img src="assets/images/Cat_Shop_by_category.png" class="w-24 mx-auto mb-4">
-        <h4 class="font-semibold text-lg">Cats</h4>
-      </div>
-      <div class="panel shadow-md rounded-xl p-6 text-center hover:shadow-lg transition">
-        <img src="assets/images/Bird_Shop_by_category.png" class="w-24 mx-auto mb-4">
-        <h4 class="font-semibold text-lg">Birds</h4>
-      </div>
-      <div class="panel shadow-md rounded-xl p-6 text-center hover:shadow-lg transition">
-        <img src="assets/images/Fish_Shop_by_category.png" class="w-24 mx-auto mb-4">
-        <h4 class="font-semibold text-lg">Fish</h4>
-      </div>
+      <?php endforeach; ?>
     </div>
   </section>
 
@@ -189,8 +211,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
     </div>
   </footer>
 
-  <!-- Global Theme Script -->
+  <!-- Theme Script -->
   <script src="assets/js/theme.js"></script>
-
 </body>
 </html>

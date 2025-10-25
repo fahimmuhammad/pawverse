@@ -152,6 +152,7 @@ body.theme-dark select.status-select{background:var(--panel);color:var(--text);}
           <a href="users.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Users</a>
           <a href="veterinarians.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Veterinarians</a>
           <a href="messages.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Messages</a>
+          <a href="appointments.php" class="block px-4 py-2 rounded-lg hover:bg-[color:var(--accent)]/10 transition">Appointments</a>
         </nav>
       </div>
       <form method="POST" action="../auth/logout.php" class="pt-6">
