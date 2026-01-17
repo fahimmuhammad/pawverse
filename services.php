@@ -121,6 +121,33 @@ body.theme-dark {
 .status.Requested{background:#22c55e;color:#fff;}
 body.theme-dark .bg-green-500{background-color:#22c55e!important;}
 body.theme-dark .bg-green-500:hover{background-color:#16a34a!important;}
+
+/* Modal form fixes for dark mode */
+.modal-input {
+  background-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  color: var(--text) !important;
+  backdrop-filter: blur(10px);
+}
+.modal-input::placeholder {
+  color: rgba(255,255,255,0.5) !important;
+}
+.modal-input:focus {
+  background-color: rgba(255,255,255,0.12) !important;
+  border-color: var(--accent) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+body.theme-dark .modal-input {
+  background-color: rgba(255,255,255,0.08) !important;
+  color: var(--text) !important;
+}
+body.theme-dark .modal-input::placeholder {
+  color: rgba(230,238,248,0.6) !important;
+}
+body.theme-dark label {
+  color: var(--text) !important;
+}
 </style>
 </head>
 
@@ -166,7 +193,7 @@ body.theme-dark .bg-green-500:hover{background-color:#16a34a!important;}
     <h3 class="text-2xl font-bold mb-6 text-[color:var(--accent)]">My Appointments</h3>
 
     <?php if (empty($appointments)): ?>
-      <p class="opacity-70">You haven’t booked any appointments yet.</p>
+      <p class="opacity-70">You haven't booked any appointments yet.</p>
     <?php else: ?>
       <div class="grid md:grid-cols-2 gap-6">
         <?php foreach ($appointments as $a): ?>
@@ -208,26 +235,26 @@ body.theme-dark .bg-green-500:hover{background-color:#16a34a!important;}
 <div id="bookingModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
   <div class="bg-[color:var(--panel)] p-6 rounded-2xl max-w-md w-full mx-4 shadow-xl relative">
     <button onclick="closeBookingModal()" class="absolute top-3 right-3 text-[color:var(--text)] hover:text-red-500">✕</button>
-    <h3 class="text-xl font-semibold mb-4">Book Appointment</h3>
+    <h3 class="text-xl font-semibold mb-4 text-[color:var(--text)]">Book Appointment</h3>
     <form method="POST">
       <input type="hidden" name="book_appointment" value="1">
       <input type="hidden" name="vet_id" id="vet_id">
       <div class="mb-3">
         <label class="block text-sm font-medium mb-1">Veterinarian</label>
-        <input type="text" id="vet_name" readonly class="w-full px-3 py-2 rounded-lg border bg-gray-50">
+        <input type="text" id="vet_name" readonly class="modal-input w-full px-3 py-2 rounded-lg">
       </div>
       <div class="grid grid-cols-2 gap-3 mb-3">
-        <input name="pet_name" placeholder="Pet name" required class="px-3 py-2 rounded-lg border">
-        <input name="pet_type" placeholder="Pet type" required class="px-3 py-2 rounded-lg border">
+        <input name="pet_name" placeholder="Pet name" required class="modal-input px-3 py-2 rounded-lg">
+        <input name="pet_type" placeholder="Pet type" required class="modal-input px-3 py-2 rounded-lg">
       </div>
       <div class="grid grid-cols-2 gap-3 mb-3">
-        <input type="date" name="appointment_date" required class="px-3 py-2 rounded-lg border">
-        <input type="time" name="appointment_time" required class="px-3 py-2 rounded-lg border">
+        <input type="date" name="appointment_date" required class="modal-input px-3 py-2 rounded-lg">
+        <input type="time" name="appointment_time" required class="modal-input px-3 py-2 rounded-lg">
       </div>
-      <textarea name="notes" rows="3" placeholder="Notes (optional)" class="w-full px-3 py-2 rounded-lg border mb-3"></textarea>
+      <textarea name="notes" rows="3" placeholder="Notes (optional)" class="modal-input w-full px-3 py-2 rounded-lg border mb-3 resize-vertical"></textarea>
       <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeBookingModal()" class="px-4 py-2 rounded-lg border">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg">Confirm</button>
+        <button type="button" onclick="closeBookingModal()" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-[color:var(--text)]">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-blue-600 transition">Confirm</button>
       </div>
     </form>
   </div>
@@ -237,16 +264,16 @@ body.theme-dark .bg-green-500:hover{background-color:#16a34a!important;}
 <div id="rescheduleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
   <div class="bg-[color:var(--panel)] p-6 rounded-2xl max-w-sm w-full mx-4 relative">
     <button onclick="closeRescheduleModal()" class="absolute top-3 right-3 text-[color:var(--text)] hover:text-red-500">✕</button>
-    <h3 class="text-xl font-semibold mb-4">Request Schedule Change</h3>
+    <h3 class="text-xl font-semibold mb-4 text-[color:var(--text)]">Request Schedule Change</h3>
     <form method="POST">
       <input type="hidden" name="reschedule_id" id="reschedule_id">
       <label class="block text-sm mb-1">New Date</label>
-      <input type="date" name="new_date" required class="w-full px-3 py-2 border rounded-lg mb-3">
+      <input type="date" name="new_date" required class="modal-input w-full px-3 py-2 border rounded-lg mb-3">
       <label class="block text-sm mb-1">New Time</label>
-      <input type="time" name="new_time" required class="w-full px-3 py-2 border rounded-lg mb-4">
+      <input type="time" name="new_time" required class="modal-input w-full px-3 py-2 border rounded-lg mb-4">
       <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeRescheduleModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg">Submit Request</button>
+        <button type="button" onclick="closeRescheduleModal()" class="px-4 py-2 border rounded-lg border-gray-300 hover:bg-gray-50 text-[color:var(--text)]">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-blue-600 transition">Submit Request</button>
       </div>
     </form>
   </div>

@@ -1,35 +1,29 @@
 <?php
 session_start();
 
-/* -------------------------------
-   CART INIT
--------------------------------- */
 $cart = $_SESSION['cart'] ?? [];
 
 /* -------------------------------
-   UPDATE QUANTITY
+   UPDATE QUANTITY / REMOVE
 -------------------------------- */
-if (isset($_POST['update_qty'])) {
-    $id = (int)$_POST['product_id'];
-    $action = $_POST['action'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    if (isset($cart[$id])) {
-        if ($action === 'inc') {
-            $cart[$id]['qty']++;
-        } elseif ($action === 'dec' && $cart[$id]['qty'] > 1) {
-            $cart[$id]['qty']--;
+    if (isset($_POST['update_qty'])) {
+        $id = (int) $_POST['product_id'];
+        $qty = max(1, (int) $_POST['qty']);
+        if (isset($cart[$id])) {
+            $cart[$id]['qty'] = $qty;
         }
-        $_SESSION['cart'] = $cart;
     }
-}
 
-/* -------------------------------
-   REMOVE ITEM
--------------------------------- */
-if (isset($_POST['remove'])) {
-    $id = (int)$_POST['product_id'];
-    unset($cart[$id]);
+    if (isset($_POST['remove_item'])) {
+        $id = (int) $_POST['product_id'];
+        unset($cart[$id]);
+    }
+
     $_SESSION['cart'] = $cart;
+    header("Location: cart.php");
+    exit;
 }
 
 /* -------------------------------
@@ -40,7 +34,6 @@ foreach ($cart as $item) {
     $total += $item['price'] * $item['qty'];
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,18 +42,23 @@ foreach ($cart as $item) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/images/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --bg:#f8fafc;--text:#0f1724;--panel:#ffffff;--accent:#3b82f6;
+  --bg:#f8fafc;
+  --text:#0f1724;
+  --panel:#ffffff;
+  --accent:#3b82f6;
 }
 .theme-dark {
   --bg:linear-gradient(135deg,#0f1724,#334155);
-  --text:#e6eef8;--panel:rgba(255,255,255,.05);
+  --text:#e6eef8;
+  --panel:rgba(255,255,255,.05);
 }
-body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;}
-.panel{background:var(--panel);}
+body { background:var(--bg); color:var(--text); font-family:"Inter",sans-serif; }
+.panel { background:var(--panel); }
 </style>
 </head>
 
@@ -68,77 +66,60 @@ body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;}
 
 <?php include 'includes/header.php'; ?>
 
-<main class="max-w-6xl mx-auto px-6 py-16">
+<main class="max-w-5xl mx-auto px-6 py-20">
 
-<h1 class="text-3xl font-bold mb-8">Your Cart 🛒</h1>
+<h1 class="text-3xl font-bold mb-8">Your Cart</h1>
 
 <?php if (empty($cart)): ?>
-<p>Your cart is empty.</p>
-<a href="products.php" class="text-blue-600 font-semibold">Continue Shopping →</a>
-
+  <p class="opacity-70">Your cart is empty.</p>
+  <a href="products.php" class="text-blue-600 underline mt-4 inline-block">Continue Shopping</a>
 <?php else: ?>
 
-<div class="grid md:grid-cols-3 gap-8">
-
-<!-- CART ITEMS -->
-<section class="md:col-span-2 space-y-4">
+<div class="space-y-4 mb-10">
 <?php foreach ($cart as $item): ?>
-<div class="panel p-4 rounded-xl flex justify-between items-center">
+  <div class="panel p-5 rounded-xl flex justify-between items-center">
 
-<div>
-<h3 class="font-semibold"><?php echo htmlspecialchars($item['name']); ?></h3>
-<p>$<?php echo number_format($item['price'],2); ?></p>
+    <div>
+      <h3 class="font-semibold"><?php echo htmlspecialchars($item['name']); ?></h3>
+      <p class="text-sm opacity-70">$<?php echo number_format($item['price'],2); ?></p>
+    </div>
 
-<form method="POST" class="flex items-center gap-2 mt-2">
-<input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-<button name="update_qty" value="1" type="submit" name="action" value="dec"
-        onclick="this.form.action.value='dec'"
-        class="px-2 border rounded">−</button>
+    <form method="POST" class="flex items-center gap-3">
+      <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
 
-<span><?php echo $item['qty']; ?></span>
+      <input
+        type="number"
+        name="qty"
+        value="<?php echo $item['qty']; ?>"
+        min="1"
+        class="w-16 border rounded px-2 py-1 text-center"
+      >
 
-<button name="update_qty" value="1" type="submit" name="action" value="inc"
-        onclick="this.form.action.value='inc'"
-        class="px-2 border rounded">+</button>
-</form>
-</div>
+      <button name="update_qty" class="text-blue-600 text-sm">Update</button>
+      <button name="remove_item" class="text-red-600 text-sm">Remove</button>
+    </form>
 
-<div class="text-right">
-<p class="font-semibold">
-$<?php echo number_format($item['price'] * $item['qty'], 2); ?>
-</p>
+    <strong>
+      $<?php echo number_format($item['price'] * $item['qty'], 2); ?>
+    </strong>
 
-<form method="POST">
-<input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-<button name="remove" class="text-red-500 text-sm mt-2">Remove</button>
-</form>
-</div>
-
-</div>
+  </div>
 <?php endforeach; ?>
-</section>
-
-<!-- SUMMARY -->
-<aside class="panel p-6 rounded-xl">
-<h3 class="text-xl font-semibold mb-4">Order Summary</h3>
-
-<p class="flex justify-between mb-2">
-<span>Total</span>
-<strong>$<?php echo number_format($total,2); ?></strong>
-</p>
-
-<a href="checkout.php"
-class="block text-center bg-[color:var(--accent)] text-white py-3 rounded-lg font-semibold mt-4">
-Proceed to Checkout
-</a>
-
-<a href="products.php"
-class="block text-center border mt-3 py-2 rounded-lg">
-Continue Shopping
-</a>
-</aside>
-
 </div>
+
+<div class="panel p-6 rounded-xl flex justify-between items-center">
+  <span class="text-xl font-bold">Total:</span>
+  <span class="text-xl font-bold">$<?php echo number_format($total,2); ?></span>
+</div>
+
+<div class="mt-6 flex justify-between">
+  <a href="products.php" class="text-blue-600 underline">Continue Shopping</a>
+  <a href="checkout.php"
+     class="bg-[color:var(--accent)] text-white px-6 py-3 rounded-lg font-semibold">
+     Proceed to Checkout
+  </a>
+</div>
+
 <?php endif; ?>
 
 </main>

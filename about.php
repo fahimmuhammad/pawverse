@@ -89,8 +89,8 @@ session_start();
       </div>
 
       <div class="lg:w-1/2 flex justify-center hero-parallax" id="heroParallax">
-        <figure class="w-[520px] max-w-full rounded-3xl overflow-hidden shadow-2xl card-glass ring-1 ring-white/6">
-          <img src="assets/images/hero-pet.png" alt="Happy pet"
+        <figure class="w-[620px] max-w-full rounded-3xl overflow-hidden shadow-2xl card-glass ring-1 ring-white/6">
+          <img src="assets/images/banner.png" alt="Happy pet"
                class="w-full h-[420px] object-cover">
         </figure>
       </div>

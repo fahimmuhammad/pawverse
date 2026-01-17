@@ -10,51 +10,60 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-/* -------------------------------
-   CART CHECK
--------------------------------- */
-if (empty($_SESSION['cart'])) {
+$userId = $_SESSION['user_id'];
+$cart = $_SESSION['cart'] ?? [];
+
+if (empty($cart)) {
     header("Location: cart.php");
     exit;
 }
-
-$userId = $_SESSION['user_id'];
 
 /* -------------------------------
    CALCULATE TOTAL
 -------------------------------- */
 $total = 0;
-foreach ($_SESSION['cart'] as $item) {
+foreach ($cart as $item) {
     $total += $item['price'] * $item['qty'];
 }
 
 /* -------------------------------
-   PLACE ORDER (THIS IS THE KEY)
+   PLACE ORDER
 -------------------------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 
-    $stmt = $conn->prepare("
-        INSERT INTO orders (user_id, total_amount, status, created_at)
-        VALUES (?, ?, 'pending', NOW())
-    ");
+    $name    = trim($_POST['customer_name']);
+    $phone   = trim($_POST['customer_phone']);
+    $address = trim($_POST['customer_address']);
 
-    if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
+    if ($name && $phone && $address) {
+
+        $itemsJson = json_encode(array_values($cart));
+
+        $stmt = $conn->prepare("
+            INSERT INTO orders
+            (user_id, customer_name, customer_phone, customer_address, items, total_amount, status)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending')
+        ");
+
+        $stmt->bind_param(
+            "issssd",
+            $userId,
+            $name,
+            $phone,
+            $address,
+            $itemsJson,
+            $total
+        );
+
+        $stmt->execute();
+        $stmt->close();
+
+        // Clear cart
+        unset($_SESSION['cart']);
+
+        header("Location: order_success.php");
+        exit;
     }
-
-    $stmt->bind_param("id", $userId, $total);
-
-    if (!$stmt->execute()) {
-        die("Execute failed: " . $stmt->error);
-    }
-
-    $stmt->close();
-
-    // IMPORTANT: clear cart ONLY AFTER successful insert
-    $_SESSION['cart'] = [];
-
-    header("Location: order_success.php");
-    exit;
 }
 ?>
 
@@ -62,40 +71,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Checkout — PawVerse</title>
+<title>PawVerse — Checkout</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" href="assets/images/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:#f8fafc;
+  --text:#0f1724;
+  --panel:#ffffff;
+  --accent:#3b82f6;
+}
+.theme-dark {
+  --bg:linear-gradient(135deg,#0f1724,#334155);
+  --text:#e6eef8;
+  --panel:rgba(255,255,255,.05);
+}
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Inter",sans-serif;
+}
+.panel { background:var(--panel); }
+</style>
 </head>
 
-<body class="bg-gray-100">
+<body>
 
 <?php include 'includes/header.php'; ?>
 
-<div class="max-w-3xl mx-auto mt-16 bg-white p-8 rounded-xl shadow">
-  <h1 class="text-2xl font-bold mb-6">Checkout</h1>
+<main class="max-w-4xl mx-auto px-6 py-20">
 
-  <div class="space-y-3 mb-6">
-    <?php foreach ($_SESSION['cart'] as $item): ?>
-      <div class="flex justify-between">
-        <span><?php echo htmlspecialchars($item['name']); ?> × <?php echo $item['qty']; ?></span>
-        <span>$<?php echo number_format($item['price'] * $item['qty'], 2); ?></span>
+  <div class="panel rounded-2xl p-8 shadow">
+    <h1 class="text-3xl font-bold mb-6">Checkout</h1>
+
+    <!-- ORDER SUMMARY -->
+    <div class="mb-6 space-y-3">
+      <?php foreach ($cart as $item): ?>
+        <div class="flex justify-between">
+          <span><?php echo htmlspecialchars($item['name']); ?> × <?php echo $item['qty']; ?></span>
+          <span>$<?php echo number_format($item['price'] * $item['qty'], 2); ?></span>
+        </div>
+      <?php endforeach; ?>
+
+      <hr class="my-3">
+      <div class="flex justify-between font-bold text-lg">
+        <span>Total</span>
+        <span>$<?php echo number_format($total, 2); ?></span>
       </div>
-    <?php endforeach; ?>
+    </div>
+
+    <!-- CHECKOUT FORM -->
+    <form method="POST" class="space-y-4">
+      <input
+        type="text"
+        name="customer_name"
+        placeholder="Full Name"
+        required
+        class="w-full px-4 py-3 rounded-lg border"
+      >
+
+      <input
+        type="text"
+        name="customer_phone"
+        placeholder="Phone Number"
+        required
+        class="w-full px-4 py-3 rounded-lg border"
+      >
+
+      <textarea
+        name="customer_address"
+        placeholder="Full Address"
+        required
+        rows="3"
+        class="w-full px-4 py-3 rounded-lg border"
+      ></textarea>
+
+      <button
+        type="submit"
+        name="place_order"
+        class="w-full bg-[color:var(--accent)] text-white py-3 rounded-lg font-semibold hover:opacity-90"
+      >
+        Place Order
+      </button>
+    </form>
   </div>
 
-  <div class="border-t pt-4 flex justify-between font-bold text-lg">
-    <span>Total</span>
-    <span>$<?php echo number_format($total, 2); ?></span>
-  </div>
+</main>
 
-  <form method="POST" class="mt-6">
-    <button
-      type="submit"
-      name="place_order"
-      class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
-      Place Order
-    </button>
-  </form>
-</div>
-
+<script src="assets/js/theme.js"></script>
 </body>
 </html>

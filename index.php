@@ -103,7 +103,7 @@ body {
        Book a Vet
     </a>
   </div>
-  <img src="assets/images/hero-pet.png" class="rounded-3xl shadow-xl">
+  <img src="assets/images/banner.png" class="rounded-3xl shadow-xl">
 </div>
 </section>
 

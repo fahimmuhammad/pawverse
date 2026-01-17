@@ -80,8 +80,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
 
 /* Fetch orders */
 $orders = $conn->query("
-  SELECT o.id, o.user_id, o.total_amount, o.status, o.created_at,
-         u.name AS user_name, u.email AS user_email
+  SELECT
+    o.id,
+    o.user_id,
+    o.customer_name,
+    o.customer_phone,
+    o.customer_address,
+    o.items,
+    o.total_amount,
+    o.payment_method,
+    o.payment_status,
+    o.status,
+    o.created_at,
+    u.email AS user_email
   FROM orders o
   LEFT JOIN users u ON o.user_id = u.id
   ORDER BY o.created_at DESC
@@ -178,39 +189,82 @@ body.theme-dark select.status-select{background:var(--panel);color:var(--text);}
     <div class="panel p-4 overflow-x-auto w-full">
       <table>
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Email</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th class="text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if ($orders && $orders->num_rows): while ($o=$orders->fetch_assoc()): ?>
-          <tr>
-            <td><?php echo $o['id']; ?></td>
-            <td><?php echo htmlspecialchars($o['user_name'] ?: 'Guest'); ?></td>
-            <td class="muted"><?php echo htmlspecialchars($o['user_email'] ?: '-'); ?></td>
-            <td><strong>$<?php echo number_format($o['total_amount'],2); ?></strong></td>
-            <td>
-              <select data-id="<?php echo $o['id']; ?>" class="status-select">
-                <?php foreach(['pending','processing','shipped','delivered','cancelled'] as $s): ?>
-                  <option value="<?php echo $s; ?>" <?php if($o['status']===$s) echo'selected'; ?>><?php echo ucfirst($s); ?></option>
-                <?php endforeach; ?>
-              </select>
-            </td>
-            <td class="muted"><?php echo date('M d, Y', strtotime($o['created_at'])); ?></td>
-            <td class="text-right">
-              <button onclick="deleteOrder(<?php echo $o['id']; ?>)" class="text-red-600 hover:text-red-800 font-semibold">Delete</button>
-            </td>
-          </tr>
-          <?php endwhile; else: ?>
-          <tr><td colspan="7" class="text-center py-4 muted">No orders available</td></tr>
-          <?php endif; ?>
-        </tbody>
+<tr>
+  <th>ID</th>
+  <th>Customer</th>
+  <th>Phone</th>
+  <th>Address</th>
+  <th>Items</th>
+  <th>Total</th>
+  <th>Payment</th>
+  <th>Pay Status</th>
+  <th>Status</th>
+  <th>Date</th>
+  <th class="text-right">Actions</th>
+</tr>
+</thead>
+
+<tbody>
+<?php if ($orders && $orders->num_rows): while ($o = $orders->fetch_assoc()): ?>
+<tr>
+
+<td><?php echo $o['id']; ?></td>
+
+<td>
+  <?php echo htmlspecialchars($o['customer_name'] ?: 'Guest'); ?><br>
+  <span class="muted text-xs"><?php echo htmlspecialchars($o['user_email'] ?: '-'); ?></span>
+</td>
+
+<td class="muted"><?php echo htmlspecialchars($o['customer_phone'] ?: '-'); ?></td>
+
+<td class="muted"><?php echo nl2br(htmlspecialchars($o['customer_address'] ?: '-')); ?></td>
+
+<td class="muted text-sm">
+<?php
+$items = json_decode($o['items'], true);
+if (is_array($items)) {
+  foreach ($items as $item) {
+    echo htmlspecialchars($item['name']) . " × " . intval($item['qty']) . "<br>";
+  }
+} else {
+  echo '-';
+}
+?>
+</td>
+
+<td><strong>$<?php echo number_format($o['total_amount'], 2); ?></strong></td>
+
+<td><?php echo strtoupper($o['payment_method']); ?></td>
+
+<td><?php echo ucfirst($o['payment_status']); ?></td>
+
+<td>
+  <select data-id="<?php echo $o['id']; ?>" class="status-select">
+    <?php foreach(['pending','processing','shipped','delivered','cancelled'] as $s): ?>
+      <option value="<?php echo $s; ?>" <?php if($o['status']===$s) echo 'selected'; ?>>
+        <?php echo ucfirst($s); ?>
+      </option>
+    <?php endforeach; ?>
+  </select>
+</td>
+
+<td class="muted"><?php echo date('M d, Y H:i', strtotime($o['created_at'])); ?></td>
+
+<td class="text-right">
+  <button onclick="deleteOrder(<?php echo $o['id']; ?>)"
+          class="text-red-600 hover:text-red-800 font-semibold">
+    Delete
+  </button>
+</td>
+
+</tr>
+<?php endwhile; else: ?>
+<tr>
+  <td colspan="11" class="text-center py-4 muted">No orders available</td>
+</tr>
+<?php endif; ?>
+</tbody>
+
       </table>
     </div>
 
