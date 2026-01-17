@@ -2,216 +2,163 @@
 session_start();
 include(__DIR__ . '/config/db.php');
 
-// Check login state
+/* -------------------------------
+   Login state
+-------------------------------- */
 $isLoggedIn = isset($_SESSION['user_id']);
 $username = '';
 
 if ($isLoggedIn) {
-    $userId = $_SESSION['user_id'];
     $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
-    $stmt->bind_param("i", $userId);
+    $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
     $stmt->bind_result($username);
     $stmt->fetch();
     $stmt->close();
 }
 
-// Fetch categories dynamically if available in DB
+/* -------------------------------
+   Categories
+-------------------------------- */
 $categories = [];
-$query = "SELECT id, name, image FROM categories LIMIT 4";
-if ($result = $conn->query($query)) {
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $categories[] = $row;
-        }
-    } else {
-        // fallback static content if no categories exist
-        $categories = [
-            ["name" => "Dogs", "image" => "assets/images/Dog_Shop_by_category.png"],
-            ["name" => "Cats", "image" => "assets/images/Cat_Shop_by_category.png"],
-            ["name" => "Birds", "image" => "assets/images/Bird_Shop_by_category.png"],
-            ["name" => "Fish", "image" => "assets/images/Fish_Shop_by_category.png"]
-        ];
+$res = $conn->query("SELECT name, image FROM categories LIMIT 4");
+
+if ($res && $res->num_rows > 0) {
+    while ($row = $res->fetch_assoc()) {
+        $categories[] = $row;
     }
-    $result->close();
+} else {
+    $categories = [
+        ["name"=>"Dogs","image"=>"assets/images/Dog_Shop_by_category.png"],
+        ["name"=>"Cats","image"=>"assets/images/Cat_Shop_by_category.png"],
+        ["name"=>"Birds","image"=>"assets/images/Bird_Shop_by_category.png"],
+        ["name"=>"Fish","image"=>"assets/images/Fish_Shop_by_category.png"]
+    ];
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PawVerse | Home</title>
+<meta charset="UTF-8">
+<title>PawVerse | Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" type="image/png" href="assets/images/logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" href="assets/images/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --text: #0f1724;
-      --muted: #64748b;
-      --panel: #ffffff;
-      --accent: #3b82f6;
-      --footer-bg: #0f1724;
-      --footer-text: #cbd5e1;
-    }
-
-    .theme-dark {
-      --bg: #0f1724;
-      --text: #e6eef8;
-      --muted: #94a3b8;
-      --panel: #1e293b;
-      --accent: #3b82f6;
-      --footer-bg: #0b1220;
-      --footer-text: #94a3b8;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: "Inter", sans-serif;
-      transition: background 0.4s, color 0.4s;
-    }
-
-    .panel {
-      background: var(--panel);
-      transition: background-color 0.4s, color 0.4s;
-    }
-
-    .muted { color: var(--muted); }
-
-    .switch {
-      width: 52px; height: 30px;
-      border-radius: 999px;
-      padding: 3px;
-      display: inline-flex;
-      align-items: center;
-      cursor: pointer;
-      background: rgba(0, 0, 0, 0.06);
-      transition: background 0.25s ease;
-    }
-    .switch .knob {
-      width: 24px; height: 24px;
-      border-radius: 999px;
-      background: white;
-      transform: translateX(0);
-      transition: transform 0.25s ease, background 0.25s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .switch.on { background: linear-gradient(90deg, var(--accent), #60a5fa); }
-    .switch.on .knob { transform: translateX(22px); background: white; }
-  </style>
+<style>
+:root {
+  --bg:#f8fafc; --text:#0f1724; --muted:#64748b;
+  --panel:#ffffff; --accent:#3b82f6;
+  --footer-bg:#0f1724; --footer-text:#cbd5e1;
+}
+.theme-dark {
+  --bg:#0f1724; --text:#e6eef8; --muted:#94a3b8;
+  --panel:#1e293b; --accent:#3b82f6;
+  --footer-bg:#0b1220; --footer-text:#94a3b8;
+}
+body {
+  background:var(--bg); color:var(--text);
+  font-family:"Inter",sans-serif;
+  transition:.3s;
+}
+.panel { background:var(--panel); }
+.muted { color:var(--muted); }
+.switch {
+  width:52px;height:30px;border-radius:999px;padding:3px;
+  display:inline-flex;align-items:center;cursor:pointer;
+  background:rgba(0,0,0,.06);
+}
+.switch .knob {
+  width:24px;height:24px;border-radius:999px;
+  background:white;transition:.25s;
+}
+.switch.on { background:linear-gradient(90deg,var(--accent),#60a5fa); }
+.switch.on .knob { transform:translateX(22px); }
+</style>
 </head>
 
 <body>
 
-  <!-- Navbar -->
-  <header class="panel shadow-sm sticky top-0 z-50 border-b border-white/10">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <a href="index.php" class="flex items-center gap-3">
-        <img src="assets/images/logo.png" class="w-10 h-10 rounded-lg" alt="PawVerse Logo">
-        <h1 class="text-2xl font-extrabold text-[color:var(--accent)]">PawVerse</h1>
-      </a>
+<!-- ================= NAVBAR ================= -->
+<?php include('includes/header.php'); ?>
 
-      <nav class="hidden md:flex space-x-6 items-center">
-        <a href="index.php" class="font-semibold text-[color:var(--accent)]">Home</a>
-        <a href="products.php" class="muted hover:text-[color:var(--accent)] transition">Products</a>
-        <a href="services.php" class="muted hover:text-[color:var(--accent)] transition">Services</a>
-        <a href="about.php" class="muted hover:text-[color:var(--accent)] transition">About</a>
-        <a href="contact.php" class="muted hover:text-[color:var(--accent)] transition">Contact</a>
 
-        <?php if ($isLoggedIn): ?>
-          <span class="muted mr-3">👋 Hi, <strong><?php echo htmlspecialchars($username); ?></strong></span>
-          <a href="auth/logout.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Logout</a>
-        <?php else: ?>
-          <a href="auth/login.php" class="bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg hover:opacity-90 transition">Login</a>
-        <?php endif; ?>
+<!-- ================= HERO ================= -->
+<section class="bg-[color:var(--panel)] py-20">
+<div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+  <div>
+    <h1 class="text-5xl font-extrabold mb-4">
+      Care. Comfort. <span class="text-[color:var(--accent)]">PawVerse.</span>
+    </h1>
+    <p class="muted mb-6 text-lg">
+      Everything your pet needs — products, vets, and love.
+    </p>
+    <a href="products.php"
+       class="bg-[color:var(--accent)] text-white px-6 py-3 rounded-lg font-semibold">
+       Shop Now
+    </a>
+    <a href="services.php" class="ml-4 text-[color:var(--accent)] font-semibold">
+       Book a Vet
+    </a>
+  </div>
+  <img src="assets/images/hero-pet.png" class="rounded-3xl shadow-xl">
+</div>
+</section>
 
-        <!-- Theme Toggle -->
-        <div class="flex items-center gap-2 ml-4">
-          <div class="text-xs muted">☀️</div>
-          <div id="themeSwitch" role="switch" aria-checked="false" tabindex="0" class="switch" title="Toggle dark mode">
-            <div class="knob"></div>
-          </div>
-          <div class="text-xs muted">🌙</div>
-        </div>
-      </nav>
-    </div>
-  </header>
+<!-- ================= CATEGORIES ================= -->
+<section class="max-w-7xl mx-auto px-6 py-20">
+<h2 class="text-3xl font-bold text-center mb-10">Shop by Category</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<?php foreach($categories as $c): ?>
+  <div class="panel rounded-xl p-6 text-center shadow">
+    <img src="<?php echo $c['image']; ?>" class="w-24 mx-auto mb-4">
+    <h4 class="font-semibold"><?php echo $c['name']; ?></h4>
+  </div>
+<?php endforeach; ?>
+</div>
+</section>
 
-  <!-- Hero Section -->
-  <section class="relative bg-[color:var(--panel)]">
-    <div class="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row items-center gap-10">
-      <div class="flex-1">
-        <h2 class="text-4xl md:text-5xl font-extrabold mb-4">
-          Care. Comfort. <span class="text-[color:var(--accent)]">PawVerse.</span>
-        </h2>
-        <p class="muted text-lg mb-6">
-          Discover everything your furry friend deserves – from premium products to professional veterinary care, all in one place.
-        </p>
-        <a href="products.php" class="bg-[color:var(--accent)] text-white px-6 py-3 rounded-lg text-lg font-semibold hover:opacity-90 transition">Shop Now</a>
-        <a href="services.php" class="ml-4 text-[color:var(--accent)] font-semibold hover:underline">Book a Vet</a>
-      </div>
-      <div class="flex-1">
-        <img src="assets/images/hero-pet.png" alt="PawVerse Pet" class="rounded-3xl shadow-xl w-full">
-      </div>
-    </div>
-  </section>
+<!-- ================= VET CTA ================= -->
+<section class="bg-[color:var(--panel)] py-20 text-center">
+<h2 class="text-3xl font-bold mb-4">Veterinary Care You Can Trust</h2>
+<p class="muted max-w-3xl mx-auto mb-8">
+Book appointments with verified veterinarians.
+</p>
+<a href="services.php"
+   class="bg-[color:var(--accent)] text-white px-6 py-3 rounded-lg font-semibold">
+   Book Appointment
+</a>
+</section>
 
-  <!-- Categories Section -->
-  <section class="max-w-7xl mx-auto px-6 py-20">
-    <h3 class="text-3xl font-bold text-center mb-10">Shop by Category</h3>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-      <?php foreach ($categories as $cat): ?>
-      <div class="panel shadow-md rounded-xl p-6 text-center hover:shadow-lg transition">
-        <img src="<?php echo htmlspecialchars($cat['image']); ?>" class="w-24 mx-auto mb-4" alt="<?php echo htmlspecialchars($cat['name']); ?>">
-        <h4 class="font-semibold text-lg"><?php echo htmlspecialchars($cat['name']); ?></h4>
-      </div>
-      <?php endforeach; ?>
-    </div>
-  </section>
+<!-- ================= FOOTER ================= -->
+<footer class="pt-10 pb-6" style="background:var(--footer-bg);color:var(--footer-text);">
+<div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-10">
+  <div>
+    <h4 class="text-white text-xl font-bold mb-2">PawVerse</h4>
+    <p>Your one-stop pet care platform.</p>
+  </div>
+  <div>
+    <h4 class="text-white font-semibold mb-2">Quick Links</h4>
+    <ul class="space-y-2">
+      <li><a href="about.php">About</a></li>
+      <li><a href="products.php">Shop</a></li>
+      <li><a href="services.php">Services</a></li>
+      <li><a href="contact.php">Contact</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4 class="text-white font-semibold mb-2">Contact</h4>
+    <p>Email: support@pawverse.com</p>
+    <p>Phone: +880 1XXX-XXXXXX</p>
+  </div>
+</div>
+<div class="text-center text-sm mt-6 border-t border-white/10 pt-4">
+© <?php echo date('Y'); ?> PawVerse
+</div>
+</footer>
 
-  <!-- Vet Services Section -->
-  <section class="py-20 bg-[color:var(--panel)]">
-    <div class="max-w-7xl mx-auto px-6 text-center">
-      <h3 class="text-3xl font-bold mb-6">Veterinary Care You Can Trust</h3>
-      <p class="muted max-w-3xl mx-auto mb-10">
-        Schedule appointments with verified veterinarians to ensure your pets stay healthy, happy, and cared for by trusted professionals.
-      </p>
-      <a href="services.php" class="bg-[color:var(--accent)] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition">Book Appointment</a>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="pt-10 pb-6" style="background: var(--footer-bg); color: var(--footer-text);">
-    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10">
-      <div>
-        <h4 class="text-xl font-bold text-white mb-3">PawVerse</h4>
-        <p>Your one-stop pet care platform for love, health, and happiness.</p>
-      </div>
-      <div>
-        <h4 class="text-lg font-semibold text-white mb-3">Quick Links</h4>
-        <ul class="space-y-2">
-          <li><a href="about.php" class="hover:text-white">About</a></li>
-          <li><a href="products.php" class="hover:text-white">Shop</a></li>
-          <li><a href="services.php" class="hover:text-white">Services</a></li>
-          <li><a href="contact.php" class="hover:text-white">Contact</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="text-lg font-semibold text-white mb-3">Contact Us</h4>
-        <p>Email: support@pawverse.com</p>
-        <p>Phone: +880 1XXX-XXXXXX</p>
-      </div>
-    </div>
-    <div class="text-center text-sm mt-8 border-t border-white/10 pt-4">
-      © <?php echo date("Y"); ?> PawVerse. All rights reserved.
-    </div>
-  </footer>
-
-  <!-- Theme Script -->
-  <script src="assets/js/theme.js"></script>
+<script src="assets/js/theme.js"></script>
 </body>
 </html>

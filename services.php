@@ -126,41 +126,8 @@ body.theme-dark .bg-green-500:hover{background-color:#16a34a!important;}
 
 <body class="bg-[color:var(--cream)] text-[color:var(--text)] antialiased">
 
-<!-- NAV -->
-<header class="w-full z-40 bg-[color:var(--cream)]/80 backdrop-blur-md border-b border-white/10">
-  <div class="max-w-7xl mx-auto px-6">
-    <nav class="flex items-center justify-between py-4">
-      <a href="index.php" class="flex items-center gap-3">
-        <img src="assets/images/logo.png" class="w-10 h-10 rounded-lg" alt="Logo">
-        <h1 class="text-xl font-bold text-[color:var(--accent)]">PawVerse</h1>
-      </a>
-
-      <div class="hidden md:flex items-center gap-6">
-        <a href="index.php" class="hover:text-[color:var(--accent)]">Home</a>
-        <a href="products.php" class="hover:text-[color:var(--accent)]">Products</a>
-        <a href="services.php" class="text-[color:var(--accent)] font-semibold">Services</a>
-        <a href="about.php" class="hover:text-[color:var(--accent)]">About</a>
-        <a href="contact.php" class="hover:text-[color:var(--accent)]">Contact</a>
-
-        <?php if ($isLoggedIn): ?>
-          <a href="#myAppointments" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition shadow-sm">
-            My Appointments
-          </a>
-          <span class="text-sm ml-3">👋 Hi, <?php echo htmlspecialchars($username); ?></span>
-          <a href="auth/logout.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Logout</a>
-        <?php else: ?>
-          <a href="auth/login.php" class="ml-4 inline-flex items-center gap-2 bg-[color:var(--accent)] px-4 py-2 rounded-lg text-white font-medium shadow-sm hover:bg-blue-500 transition">Log in</a>
-        <?php endif; ?>
-
-        <div class="flex items-center gap-2 ml-4">
-          <div class="text-xs opacity-70">☀️</div>
-          <div id="themeSwitch" class="switch"><div class="knob"></div></div>
-          <div class="text-xs opacity-70">🌙</div>
-        </div>
-      </div>
-    </nav>
-  </div>
-</header>
+<!-- Nav -->
+<?php include('includes/header.php'); ?>
 
 <!-- MAIN -->
 <main class="pt-28">
